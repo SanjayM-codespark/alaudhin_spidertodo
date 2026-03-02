@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+
+    # Serve assets from public folder
+    RewriteRule ^images/(.*)$ public/images/$1 [L,NC]
+    RewriteRule ^css/(.*)$ public/css/$1 [L,NC]
+    RewriteRule ^js/(.*)$ public/js/$1 [L,NC]
+    RewriteRule ^build/(.*)$ public/build/$1 [L,NC]
+
+    # Remove trailing slash
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)/$ $1 [R=301,L]
+
+    # Forward everything else to Laravel
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
