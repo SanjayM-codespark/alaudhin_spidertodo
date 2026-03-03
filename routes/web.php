@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MeasurementUnitController;
+use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PackageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductUnitPriceController;
 use App\Http\Controllers\ProfileController;
@@ -89,7 +92,83 @@ Route::middleware(['auth'])->prefix('orders')->name('orders.')->group(function (
 });
 
 // Master List routes - Admin only (no vendor access)
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware('auth')->group(function () {
+    Route::prefix('memberships')->name('memberships.')->group(function () {
+
+        // ==================== API/JSON ROUTES (Must come first) ====================
+        Route::get('/api/expiring-soon', [MembershipController::class, 'getExpiringSoon'])->name('api.expiring-soon');
+        Route::get('/api/active-count', [MembershipController::class, 'getActiveCount'])->name('api.active-count');
+
+        // ==================== FILTER/SPECIAL ROUTES ====================
+        Route::get('/expiring-soon', [MembershipController::class, 'expiringSoon'])->name('expiring-soon');
+        Route::get('/due-for-renewal', [MembershipController::class, 'dueForRenewal'])->name('due-for-renewal');
+        Route::get('/by-organization/{organization}', [MembershipController::class, 'byOrganization'])->name('by-organization');
+        Route::get('/by-package/{package}', [MembershipController::class, 'byPackage'])->name('by-package');
+
+        // ==================== CREATE ROUTE (Must come before {membership} parameter) ====================
+        Route::get('/create', [MembershipController::class, 'create'])->name('create');
+        Route::get('/create/{organization}', [MembershipController::class, 'create'])->name('create.for-organization');
+
+        // ==================== RESOURCE ROUTES ====================
+        Route::get('/', [MembershipController::class, 'index'])->name('index');
+        Route::post('/', [MembershipController::class, 'store'])->name('store');
+        Route::get('/{membership}', [MembershipController::class, 'show'])->name('show');
+        Route::get('/{membership}/edit', [MembershipController::class, 'edit'])->name('edit');
+        Route::put('/{membership}', [MembershipController::class, 'update'])->name('update');
+        Route::delete('/{membership}', [MembershipController::class, 'destroy'])->name('destroy');
+
+        // ==================== MEMBERSHIP ACTION ROUTES ====================
+        Route::post('/{membership}/cancel', [MembershipController::class, 'cancel'])->name('cancel');
+        Route::post('/{membership}/renew', [MembershipController::class, 'renew'])->name('renew');
+        Route::post('/{membership}/suspend', [MembershipController::class, 'suspend'])->name('suspend');
+        Route::post('/{membership}/activate', [MembershipController::class, 'activate'])->name('activate');
+
+        // ==================== PAYMENT ROUTES ====================
+        Route::post('/{membership}/mark-paid', [MembershipController::class, 'markPaid'])->name('mark-paid');
+        Route::post('/{membership}/refund', [MembershipController::class, 'refund'])->name('refund');
+
+        // ==================== BULK OPERATIONS ====================
+        Route::post('/bulk-delete', [MembershipController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/bulk-update-status', [MembershipController::class, 'bulkUpdateStatus'])->name('bulk-update-status');
+
+        // ==================== REPORTS ====================
+        Route::get('/reports/revenue', [MembershipController::class, 'revenueReport'])->name('reports.revenue');
+        Route::get('/reports/export', [MembershipController::class, 'export'])->name('reports.export');
+    });
+
+    // ==================== ORGANIZATION MEMBERSHIPS (Nested Route) ====================
+    Route::get('/organizations/{organization}/memberships', [MembershipController::class, 'byOrganization'])
+        ->name('organizations.memberships');
+    Route::prefix('packages')->name('packages.')->group(function () {
+
+        // ==================== API/JSON ROUTES ====================
+        Route::get('/active/list', [PackageController::class, 'getActivePackages'])->name('active.list');
+
+        Route::get('/', [PackageController::class, 'index'])->name('index');
+        Route::get('/create', [PackageController::class, 'create'])->name('create');
+        Route::post('/', [PackageController::class, 'store'])->name('store');
+        Route::get('/{package}', [PackageController::class, 'show'])->name('show');
+        Route::get('/{package}/edit', [PackageController::class, 'edit'])->name('edit');
+        Route::put('/{package}', [PackageController::class, 'update'])->name('update');
+        Route::delete('/{package}', [PackageController::class, 'destroy'])->name('destroy');
+
+        // ==================== CUSTOM ROUTES ====================
+        Route::post('/{package}/toggle-active', [PackageController::class, 'toggleActive'])->name('toggle-active');
+        Route::post('/{package}/toggle-featured', [PackageController::class, 'toggleFeatured'])->name('toggle-featured');
+        Route::post('/{package}/toggle-public', [PackageController::class, 'togglePublic'])->name('toggle-public');
+
+        // ==================== BULK OPERATIONS ====================
+        Route::post('/bulk-delete', [PackageController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/update-sort-order', [PackageController::class, 'updateSortOrder'])->name('update-sort-order');
+    });
+    Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations.index');
+    Route::get('/organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
+    Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');
+    Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
+    Route::get('/organizations/{organization}/edit', [OrganizationController::class, 'edit'])->name('organizations.edit');
+    Route::put('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
+    Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
+    Route::patch('/organizations/{organization}/toggle-status', [OrganizationController::class, 'toggleStatus'])->name('organizations.toggle-status');
     // Measurement Units
     Route::resource('measurement-units', MeasurementUnitController::class);
     Route::post('/measurement-units/{measurementUnit}/toggle-active', [MeasurementUnitController::class, 'toggleActive'])->name('measurement-units.toggle-active');

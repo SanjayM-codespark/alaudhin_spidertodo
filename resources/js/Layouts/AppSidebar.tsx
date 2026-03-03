@@ -34,6 +34,44 @@ const BoxCubeIcon = () => (
   </svg>
 );
 
+// Package Icon
+const PackageIcon = () => (
+  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+    <path d="M20 7.5l-8-4-8 4v9l8 4 8-4v-9z" />
+    <path d="M12 12l4-2v4l-4 2-4-2v-4l4 2z" strokeLinecap="round" />
+    <path d="M12 17v-5" strokeLinecap="round" />
+    <path d="M8 10v4" strokeLinecap="round" />
+  </svg>
+);
+
+// Membership Icon (New)
+const MembershipIcon = () => (
+  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+    <path d="M2 17l10 5 10-5" strokeLinecap="round" />
+    <path d="M2 12l10 5 10-5" strokeLinecap="round" />
+  </svg>
+);
+
+const OrganizationsIcon = () => (
+  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+    <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const AddOrganizationIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const AddMembershipIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M20 12H4" strokeLinecap="round" />
+  </svg>
+);
+
 const ChevronIcon = ({ className = "" }: { className?: string }) => (
   <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${className}`} fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
     <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -72,20 +110,38 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { icon: <GridIcon />, name: "Dashboard", path: `${baseUrl}dashboard`, vendorAccess: true },
-  { icon: <ListIcon />, name: "Orders", path: `${baseUrl}orders`, vendorAccess: true },
   {
-    name: "Master List",
-    icon: <BoxCubeIcon />,
+    name: "Organizations",
+    icon: <OrganizationsIcon />,
     subItems: [
-      { name: "Measurement Units", path: `${baseUrl}measurement-units` },
-      { name: "Products", path: `${baseUrl}products` },
+      { name: "All Organizations", path: `${baseUrl}organizations` },
+      { name: "Create Organization", path: `${baseUrl}organizations/create`, new: true },
+    ],
+    vendorAccess: false,
+  },
+  {
+    name: "Memberships",
+    icon: <MembershipIcon />,
+    subItems: [
+      { name: "All Memberships", path: `${baseUrl}memberships` },
+      { name: "Create Membership", path: `${baseUrl}memberships/create`, new: true },
     ],
     vendorAccess: false,
   },
   { icon: <UserCircleIcon />, name: "User Profile", path: `${baseUrl}profile`, vendorAccess: true },
 ];
 
-const othersItems: NavItem[] = [];
+const othersItems: NavItem[] = [
+  {
+    name: "Package Management",
+    icon: <PackageIcon />,
+    subItems: [
+      { name: "All Packages", path: `${baseUrl}packages` },
+      { name: "Create Package", path: `${baseUrl}packages/create`, new: true },
+    ],
+    vendorAccess: false,
+  },
+];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
@@ -166,6 +222,8 @@ const AppSidebar: React.FC = () => {
     gradFade:   isDark ? "from-[#0d0e14]"                             : "from-white",
     logoName:   isDark ? "text-white"                                 : "text-gray-900",
     logoSub:    isDark ? "text-violet-400/80"                         : "text-violet-500",
+    createBtn:  isDark ? "text-emerald-400 hover:text-emerald-300 bg-emerald-500/5 hover:bg-emerald-500/10" : "text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100",
+    proBtn:     isDark ? "text-violet-400 hover:text-violet-300 bg-violet-500/5 hover:bg-violet-500/10" : "text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100",
   };
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
@@ -173,6 +231,15 @@ const AppSidebar: React.FC = () => {
       {items.map((nav, index) => {
         const isSubmenuOpen = openSubmenu?.type === menuType && openSubmenu?.index === index;
         const hasActiveChild = nav.subItems?.some((s) => isActive(s.path));
+
+        // Special styling for Create items
+        const hasCreateItems = nav.subItems?.some(item =>
+          item.name === "Create Organization" ||
+          item.name === "Create Package" ||
+          item.name === "Create Membership"
+        );
+
+        const hasProItems = nav.subItems?.some(item => item.pro);
 
         return (
           <li key={nav.name}>
@@ -204,26 +271,45 @@ const AppSidebar: React.FC = () => {
                     className="overflow-hidden transition-all duration-300 ease-in-out mt-0.5 space-y-0.5"
                     style={{ height: isSubmenuOpen ? `${subMenuHeight[`${menuType}-${index}`] || 0}px` : "0px" }}
                   >
-                    {nav.subItems.map((subItem) => (
-                      <li key={subItem.name}>
-                        <Link
-                          href={subItem.path}
-                          className={[
-                            "flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] transition-all duration-200 ml-7",
-                            isActive(subItem.path) ? t.subActive : t.subDefault,
-                          ].join(" ")}
-                        >
-                          <span className={`w-1 h-1 rounded-full ${isActive(subItem.path) ? t.subDotActive : t.subDot}`} />
-                          <span className="flex-1 tracking-[0.01em]">{subItem.name}</span>
-                          {subItem.new && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 rounded-md tracking-wide">NEW</span>
-                          )}
-                          {subItem.pro && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-violet-500/15 text-violet-400 rounded-md tracking-wide">PRO</span>
-                          )}
-                        </Link>
-                      </li>
-                    ))}
+                    {nav.subItems.map((subItem) => {
+                      // Determine button style based on item type
+                      let buttonStyle = isActive(subItem.path) ? t.subActive : t.subDefault;
+
+                      if (!isActive(subItem.path)) {
+                        if (subItem.name.includes("Create")) {
+                          buttonStyle = t.createBtn;
+                        } else if (subItem.pro) {
+                          buttonStyle = t.proBtn;
+                        }
+                      }
+
+                      return (
+                        <li key={subItem.name}>
+                          <Link
+                            href={subItem.path}
+                            className={[
+                              "flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] transition-all duration-200 ml-7",
+                              buttonStyle,
+                            ].join(" ")}
+                          >
+                            {subItem.name.includes("Create") ? (
+                              <AddOrganizationIcon />
+                            ) : subItem.pro ? (
+                              <span className={`w-1 h-1 rounded-full ${isActive(subItem.path) ? t.subDotActive : t.subDot}`} />
+                            ) : (
+                              <span className={`w-1 h-1 rounded-full ${isActive(subItem.path) ? t.subDotActive : t.subDot}`} />
+                            )}
+                            <span className="flex-1 tracking-[0.01em]">{subItem.name}</span>
+                            {subItem.new && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 rounded-md tracking-wide">NEW</span>
+                            )}
+                            {subItem.pro && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-violet-500/15 text-violet-400 rounded-md tracking-wide">PRO</span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
@@ -295,7 +381,7 @@ const AppSidebar: React.FC = () => {
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`text-[10px] font-semibold uppercase tracking-widest leading-none ${t.logoSub}`}>
-                  Super Admin
+                  {userRole === 'admin' ? 'Administrator' : userRole === 'vendor' ? 'Vendor' : 'User'}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
               </div>

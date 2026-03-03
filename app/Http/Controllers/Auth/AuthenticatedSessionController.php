@@ -33,6 +33,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+
+        // 🔥 Check if user is admin
+        if (!$user->is_admin) {
+
+            Auth::logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'You are not authorized to access the admin panel.',
+            ]);
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
