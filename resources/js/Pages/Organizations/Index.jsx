@@ -40,7 +40,7 @@ export default function OrganizationsIndex({ organizations, filters }) {
                     {
                         preserveState: true,
                         preserveScroll: true,
-                        replace: true, // Use replace instead of push to avoid history clutter
+                        replace: true,
                         onFinish: () => setLoading(false),
                     }
                 );
@@ -48,11 +48,10 @@ export default function OrganizationsIndex({ organizations, filters }) {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [searchTerm, statusFilter]); // Add statusFilter to dependencies
+    }, [searchTerm, statusFilter, filters?.search, filters?.status]);
 
     const handleStatusFilter = (status) => {
         setStatusFilter(status);
-        // The useEffect will handle the navigation
     };
 
     const handleDelete = (organization) => {
@@ -67,6 +66,11 @@ export default function OrganizationsIndex({ organizations, filters }) {
         router.patch(route('organizations.toggle-status', organization.id), {}, {
             preserveScroll: true,
         });
+    };
+
+    // Function to navigate to users page
+    const handleViewUsers = (organization) => {
+        router.get(route('organizations.users', organization.id));
     };
 
     const formatDate = (date) => {
@@ -104,6 +108,8 @@ export default function OrganizationsIndex({ organizations, filters }) {
         // Badge colors
         badgeActive: isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100 text-emerald-700 border-emerald-200',
         badgeInactive: isDark ? 'bg-slate-400/10 text-slate-400 border-slate-400/20' : 'bg-gray-100 text-gray-600 border-gray-200',
+        badgeAdmin: isDark ? 'bg-violet-500/10 text-violet-400 border-violet-500/20' : 'bg-violet-100 text-violet-700 border-violet-200',
+        badgeStaff: isDark ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-100 text-blue-700 border-blue-200',
 
         // Header specific
         headerTitle: isDark ? 'text-white/90' : 'text-gray-900',
@@ -280,13 +286,14 @@ export default function OrganizationsIndex({ organizations, filters }) {
                                 </div>
 
                                 <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[800px]">
+                                    <table className="w-full min-w-[900px]">
                                         <thead>
                                             <tr className={`border-b ${themeClasses.borderBottom}`}>
                                                 <th className={`text-left px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Organization</th>
                                                 <th className={`text-left px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Contact</th>
                                                 <th className={`text-left px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Location</th>
                                                 <th className={`text-left px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Database</th>
+                                                <th className={`text-left px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Users</th>
                                                 <th className={`text-left px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Status</th>
                                                 <th className={`text-left px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Created</th>
                                                 <th className={`text-right px-5 sm:px-6 py-3 text-[10px] font-bold uppercase tracking-wider ${themeClasses.subheading}`}>Actions</th>
@@ -338,6 +345,30 @@ export default function OrganizationsIndex({ organizations, filters }) {
                                                         </p>
                                                     </td>
                                                     <td className="px-5 sm:px-6 py-4">
+                                                        <button
+                                                            onClick={() => handleViewUsers(org)}
+                                                            className="flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                                                        >
+                                                            <div className="flex -space-x-2">
+                                                                {org.users_count > 0 ? (
+                                                                    <>
+                                                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-medium ${themeClasses.card} ${themeClasses.body}`}>
+                                                                            {org.users_count}
+                                                                        </div>
+                                                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${themeClasses.card} ${themeClasses.body} group-hover:bg-violet-500/10 transition-colors`}>
+                                                                            <svg className="w-3 h-3 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                            </svg>
+                                                                        </div>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className={`text-[11px] ${themeClasses.muted}`}>No users</span>
+                                                                )}
+                                                            </div>
+                                                        </button>
+                                                    </td>
+                                                    <td className="px-5 sm:px-6 py-4">
                                                         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold border ${
                                                             org.is_active ? themeClasses.badgeActive : themeClasses.badgeInactive
                                                         }`}>
@@ -350,6 +381,15 @@ export default function OrganizationsIndex({ organizations, filters }) {
                                                     </td>
                                                     <td className="px-5 sm:px-6 py-4">
                                                         <div className="flex items-center justify-end gap-2">
+                                                            <Link
+                                                                href={route('organizations.users', org.id)}
+                                                                className={`p-1.5 rounded-lg transition-colors ${themeClasses.rowHover}`}
+                                                                title="View Users"
+                                                            >
+                                                                <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                                                </svg>
+                                                            </Link>
                                                             <button
                                                                 onClick={() => handleToggleStatus(org)}
                                                                 className={`p-1.5 rounded-lg transition-colors ${themeClasses.rowHover}`}

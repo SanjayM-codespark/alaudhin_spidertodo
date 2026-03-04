@@ -170,6 +170,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::patch('/organizations/{organization}/toggle-status', [OrganizationController::class, 'toggleStatus'])->name('organizations.toggle-status');
     // Measurement Units
+    Route::get('/organizations/{organization}/users', [OrganizationController::class, 'users'])->name('organizations.users');
+    Route::get('/organizations/{organization}/users/data', [OrganizationController::class, 'getUsers'])->name('organizations.users.data');
     Route::resource('measurement-units', MeasurementUnitController::class);
     Route::post('/measurement-units/{measurementUnit}/toggle-active', [MeasurementUnitController::class, 'toggleActive'])->name('measurement-units.toggle-active');
     Route::post('/measurement-units/bulk-delete', [MeasurementUnitController::class, 'bulkDestroy'])->name('measurement-units.bulk-destroy');
